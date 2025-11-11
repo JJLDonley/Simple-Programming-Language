@@ -8,7 +8,7 @@
 - **Minimal conditionals:** Expression-based with `|>` chain operator for short-circuiting
 - **Minimal syntax:** No unnecessary keywords, clear and readable
 
-**File Extension:** `.s`
+**File Extension:** `.simple`
 
 ---
 
