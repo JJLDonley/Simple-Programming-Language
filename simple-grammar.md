@@ -284,7 +284,10 @@ Person {
     name :: string = ""
     age : int = 0
     title :: string = "Mr."
-    count : int = 0
+    
+    new(name: string, age: int): Person {
+        return { .name = name, .age = age, .title = "Mr." }
+    }
     
     greet(): string {
         return "Hello, " + .name + "! Age: " + str(.age)
@@ -295,7 +298,12 @@ Person {
     }
 }
 
-p :: Person = Person("Jae", 25)
+// Constructor method instantiation
+p :: Person = Person.new("Jae", 25)
+
+// Or struct-style instantiation
+p2 : Person = { .name = "Alice", .age = 30, .title = "Ms." }
+
 p.greet()
 p.birthday()
 ```
@@ -304,12 +312,20 @@ p.birthday()
 Artifacts support composition only. No inheritance.
 
 ### Instantiation
+
+Artifacts are instantiated through constructor methods that return the artifact type:
+
 ```
-<instance> : <ArtifactType> = <ArtifactName>(<args>)    // mutable instance
-<instance> :: <ArtifactType> = <ArtifactName>(<args>)   // immutable instance
+<instance> : <ArtifactType> = <ArtifactName>.<constructor>(<args>)    // mutable
+<instance> :: <ArtifactType> = <ArtifactName>.<constructor>(<args>)   // immutable
 ```
 
-Arguments are passed to initialize properties in declaration order.
+Alternatively, using struct-style initialization:
+
+```
+<instance> : <ArtifactType> = { .prop = value, .prop = value }
+<instance> :: <ArtifactType> = { .prop = value, .prop = value }
+```
 
 ### Static Usage (Namespace Pattern)
 Artifacts can also be used as namespaces without instantiation:
@@ -715,12 +731,16 @@ Vec2 {
     x :: float = 0.0
     y :: float = 0.0
     
+    new(x: float, y: float): Vec2 {
+        return { .x = x, .y = y }
+    }
+    
     length(): float {
         return sqrt(.x * .x + .y * .y)
     }
     
     add(other: Vec2): Vec2 {
-        return Vec2(.x + other.x, .y + other.y)
+        return { .x = .x + other.x, .y = .y + other.y }
     }
 }
 
@@ -741,8 +761,8 @@ classify(value: int): string {
 }
 
 main(): void {
-    pos :: Vec2 = Vec2(3.0, 4.0)
-    vel :: Vec2 = Vec2(1.0, 0.0)
+    pos :: Vec2 = Vec2.new(3.0, 4.0)
+    vel :: Vec2 = Vec2.new(1.0, 0.0)
     
     status :: int = Status.Running
     
@@ -845,13 +865,16 @@ main(): void {
          | <expr> "(" <args> ")"
          | "(" <expr> ")"
          | "[" <list> "]"
-         | <ident> "(" <args> ")"
+         | <ident> "." <ident> "(" <args> ")"    // Artifact.method() call
+         | "{" <struct_init> "}"                  // struct-style initialization
 
 <args> ::= ε
          | <expr> ("," <expr>)*
 
 <list> ::= ε
          | <expr> ("," <expr>)*
+
+<struct_init> ::= "." <ident> "=" <expr> ("," "." <ident> "=" <expr>)*
 
 <binary_op> ::= "+" | "-" | "*" | "/" | "%"
               | "==" | "!=" | "<" | ">" | "<=" | ">="
