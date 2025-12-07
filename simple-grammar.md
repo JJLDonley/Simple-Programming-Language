@@ -6,6 +6,7 @@
 - **Artifacts:** Unified construct for data structures, enumerations, and namespaces
 - **Procedures:** First-class functions with no keyword prefix
 - **Minimal conditionals:** Expression-based with `|>` chain operator for short-circuiting
+- **Strict typing:** All variables must have explicit type declarations
 - **Minimal syntax:** No unnecessary keywords, clear and readable
 
 **File Extension:** `.s`
@@ -25,7 +26,6 @@ All artifacts use the same syntax: `Identifier { body }` with no keyword prefix.
 ### Procedures
 A **Procedure** is a callable function defined with no keyword prefix:
 ```
-identifier(params) { body }
 identifier(params): return_type { body }
 ```
 
@@ -73,7 +73,7 @@ Example:
 `&&`, `||`, `!`
 
 ### Assignment
-`=` (assignment), `:=` (mutable declaration), `::=` (immutable declaration)
+`=` (assignment and mutable declaration), `::` (immutable declaration)
 
 ### Access
 `.` (property access), `[]` (index access)
@@ -103,7 +103,7 @@ From highest to lowest precedence:
 11. `&&` (logical AND)
 12. `||` (logical OR)
 13. `|>` (conditional chain)
-14. `=`, `:=`, `::=` (assignment/declaration)
+14. `=`, `::` (assignment/declaration)
 
 Examples:
 ```
@@ -128,49 +128,41 @@ Null:     null
 
 ## Variables
 
-**Colon Pattern:**
-- `::` (double colon) → immutable
-- `:` (single colon) → mutable
-- When combining type + value: use `:=` for immutable, `=` for mutable
+**Declaration Pattern:**
+- `::` (double colon with `=`) → immutable
+- `:` (single colon with `=`) → mutable
+- All declarations require explicit types
 
 ### Syntax
 
 | Pattern | Mutability | Example |
 |---------|------------|---------|
-| `ident :: type` | Immutable | `x :: int` |
-| `ident ::= value` | Immutable | `x ::= 10` |
-| `ident : type := value` | Immutable | `x : int := 10` |
-| `ident : type` | Mutable | `y : int` |
-| `ident := value` | Mutable | `y := 10` |
+| `ident :: type = value` | Immutable | `x :: int = 10` |
 | `ident : type = value` | Mutable | `y : int = 10` |
 | `ident = value` | Assignment | `y = 20` |
 
 ```
-// Immutable (double colon)
-<ident> :: <type>              // type declaration only
-<ident> ::= <expr>             // inferred type
-<ident> : <type> := <expr>     // explicit type with value
+// Immutable
+<ident> :: <type> = <expr>
 
-// Mutable (single colon)
-<ident> : <type>               // type declaration only
-<ident> := <expr>              // inferred type
-<ident> : <type> = <expr>      // explicit type with value
+// Mutable
+<ident> : <type> = <expr>
 
 // Assignment
-<ident> = <expr>               // assign to existing variable
+<ident> = <expr>
 ```
 
 ### Examples
 ```
 // Immutable
-x :: int               // type only
-name ::= "Jae"         // inferred as string
-age : int := 25        // explicit type
+name :: string = "Jae"
+age :: int = 25
+PI :: float = 3.14159
 
 // Mutable
-y : int                // type only
-count := 0             // inferred as int
-total : int = 100      // explicit type
+count : int = 0
+total : int = 100
+active : bool = true
 
 // Assignment
 count = 5              // OK: reassign mutable
@@ -183,21 +175,23 @@ name = "John"          // ERROR: cannot assign to immutable
 
 ### Syntax
 ```
-<ident>(<params>) { <body> }
 <ident>(<params>): <type> { <body> }
 ```
+
+All procedures must have explicit return types. Use `void` for procedures that don't return a value.
 
 ### Parameters
 ```
 <params> ::= ε
-           | <ident>
            | <ident>: <type>
            | <params>, <params>
 ```
 
+All parameters must have explicit types.
+
 ### Examples
 ```
-greet(name) {
+greet(name: string): string {
     return "Hello " + name
 }
 
@@ -205,14 +199,13 @@ add(a: int, b: int): int {
     return a + b
 }
 
-print_message(msg: string) {
-    // void return
+print_message(msg: string): void {
 }
 ```
 
 ### Default Parameters
 ```
-greet(name = "World") {
+greet(name: string = "World"): string {
     return "Hello " + name
 }
 
@@ -232,21 +225,21 @@ add(a: int, b: int): int {
     return a + b
 }
 
-apply(operation, x: int, y: int): int {
+apply(operation: (int, int): int, x: int, y: int): int {
     return operation(x, y)
 }
 
-callback ::= add
-result ::= apply(callback, 5, 3)  // 8
+callback :: (int, int): int = add
+result :: int = apply(callback, 5, 3)
 
-make_multiplier(factor: int) {
+make_multiplier(factor: int): (int): int {
     return (x: int): int {
         return x * factor
     }
 }
 
-double ::= make_multiplier(2)
-value ::= double(5)  // 10
+double :: (int): int = make_multiplier(2)
+value :: int = double(5)
 ```
 
 ---
@@ -264,21 +257,20 @@ value ::= double(5)  // 10
 ### Properties
 ```
 // Immutable
-<property> ::= <ident> :: <type>
-             | <ident> ::= <expr>
-             | <ident> : <type> := <expr>
+<property> ::= <ident> :: <type> = <expr>
 
 // Mutable
-<property> ::= <ident> : <type>
-             | <ident> := <expr>
-             | <ident> : <type> = <expr>
+<property> ::= <ident> : <type> = <expr>
 ```
+
+All properties must have explicit types and default values.
 
 ### Methods
 ```
-<method> ::= <ident>(<params>) { <body> }
-           | <ident>(<params>): <type> { <body> }
+<method> ::= <ident>(<params>): <type> { <body> }
 ```
+
+All methods must have explicit return types.
 
 ### Property Access
 Use `.` prefix to reference artifact properties within methods:
@@ -289,21 +281,21 @@ Use `.` prefix to reference artifact properties within methods:
 ### Example
 ```
 Person {
-    name :: string               // immutable, no default
-    age : int                    // mutable, no default
-    title : string := "Mr."      // immutable with default
-    count : int = 0              // mutable with default
+    name :: string = ""
+    age : int = 0
+    title :: string = "Mr."
+    count : int = 0
     
     greet(): string {
         return "Hello, " + .name + "! Age: " + str(.age)
     }
     
-    birthday() {
+    birthday(): void {
         .age = .age + 1
     }
 }
 
-p ::= Person("Jae", 25)
+p :: Person = Person("Jae", 25)
 p.greet()
 p.birthday()
 ```
@@ -313,8 +305,8 @@ Artifacts support composition only. No inheritance.
 
 ### Instantiation
 ```
-<instance> := <ArtifactName>(<args>)    // mutable instance
-<instance> ::= <ArtifactName>(<args>)   // immutable instance
+<instance> : <ArtifactType> = <ArtifactName>(<args>)    // mutable instance
+<instance> :: <ArtifactType> = <ArtifactName>(<args>)   // immutable instance
 ```
 
 Arguments are passed to initialize properties in declaration order.
@@ -324,8 +316,8 @@ Artifacts can also be used as namespaces without instantiation:
 
 ```
 Math {
-    PI : float := 3.14159
-    E : float := 2.71828
+    PI :: float = 3.14159
+    E :: float = 2.71828
     
     abs(x: float): float {
         |> x < 0.0 { return -x }
@@ -337,9 +329,8 @@ Math {
     }
 }
 
-// Direct access without instantiation
-value ::= Math.PI
-result ::= Math.abs(-5.0)
+value :: float = Math.PI
+result :: float = Math.abs(-5.0)
 ```
 
 ---
@@ -376,10 +367,30 @@ Artifacts can represent enumerated values by defining constant members.
 
 ## Collections
 
-### Declaration
+### Arrays vs Lists
+
+**Arrays:**
+- Fixed-size, stack-allocated
+- Size must be known at compile time
+- Syntax: `[size]type`
+- Faster access, contiguous memory
+
+**Lists:**
+- Dynamic-size, heap-allocated
+- Can grow and shrink at runtime
+- Syntax: `[type]`
+- Flexible but slower than arrays
+
+### Array Declaration
 ```
-<ident> := [<expr>, <expr>, ...]    // mutable list
-<ident> ::= [<expr>, <expr>, ...]   // immutable array
+<ident> : [<size>]<type> = [<expr>, ...]      // mutable array
+<ident> :: [<size>]<type> = [<expr>, ...]     // immutable array
+```
+
+### List Declaration
+```
+<ident> : [<type>] = [<expr>, ...]            // mutable list
+<ident> :: [<type>] = [<expr>, ...]           // immutable list
 ```
 
 ### Access
@@ -389,13 +400,23 @@ Artifacts can represent enumerated values by defining constant members.
 
 ### Examples
 ```
-numbers := [10, 20, 30, 40, 50]     // mutable list
-names ::= ["Alice", "Bob", "Charlie"] // immutable array
+// Fixed-size arrays (stack-allocated)
+numbers : [5]int = [10, 20, 30, 40, 50]
+coords :: [3]float = [1.0, 2.0, 3.0]
 
-first ::= numbers[1]   // 10 (first element)
-third ::= numbers[3]   // 30 (third element)
-numbers[2] = 25        // OK: modify mutable list
-names[1] = "Dave"      // ERROR: cannot modify immutable array
+// Dynamic lists (heap-allocated)
+items : [int] = [1, 2, 3]
+names :: [string] = ["Alice", "Bob", "Charlie"]
+
+// Array access
+first :: int = numbers[1]
+numbers[2] = 25                    // OK: mutable array
+coords[1] = 5.0                    // ERROR: immutable array
+
+// List operations
+items.push(4)                      // OK: mutable list can grow
+items.pop()                        // OK: mutable list can shrink
+names.push("Dave")                 // ERROR: immutable list
 ```
 
 **Note:** Simple uses 1-based indexing. The first element is at index 1.
@@ -424,7 +445,6 @@ Each condition prefixed with `|>` forms a short-circuit chain. Only the first tr
 
 ### Examples
 ```
-// Standalone conditional (independent, always evaluates)
 age > 18 {
     print("Adult")
 }
@@ -454,7 +474,7 @@ grade(score: int): string {
 }
 
 // Nested conditionals
-process(value: int) {
+process(value: int): void {
     value > 0 {
         |> value > 100 { print("very large") }
         |> value > 50 { print("large") }
@@ -474,7 +494,7 @@ while <expr> { <body> }
 
 ### Example
 ```
-count := 0
+count : int = 0
 while count < 10 {
     count = count + 1
 }
@@ -498,7 +518,7 @@ i, 5 .. 20 {
 
 i, 1 .. items {
     // i goes from 1 to items.length
-    value = items[i]
+    value :: int = items[i]
 }
 
 i, 3 .. names {
@@ -533,7 +553,7 @@ i, 1 .. 10 {
     }
 }
 
-find(items, target) {
+find(items: [int], target: int): int {
     i, 1 .. items {
         items[i] == target {
             return i
@@ -645,55 +665,35 @@ bool(0)              // false
 ### Scope Rules
 - **Block scope:** Variables declared in `{}` blocks are local to that block
 - **Global access:** Procedures and blocks can access global variables
-- **Shadowing allowed:** Variables can be redeclared with `:=` or `::=` to shadow existing names
+- **Shadowing allowed:** Variables can be redeclared with `:` or `::` to shadow existing names
 - **Assignment:** `=` assigns to existing variables; requires mutable variable
 
 ```
-x ::= 10          // global (immutable)
+x :: int = 10          // global (immutable)
 
-example() {
-    x = 5         // ERROR: cannot assign to immutable x
-    x := 5        // OK: declares new mutable x (shadows global)
-    x = 10        // OK: assigns to the mutable local x
+example(): void {
+    x = 5              // ERROR: cannot assign to immutable x
+    x : int = 5        // OK: declares new mutable x (shadows global)
+    x = 10             // OK: assigns to the mutable local x
     
-    y := 20       // local mutable
-    y = 30        // OK: assigns to mutable y
+    y : int = 20       // local mutable
+    y = 30             // OK: assigns to mutable y
     
-    z ::= 40      // local immutable
-    z = 50        // ERROR: cannot assign to immutable z
+    z :: int = 40      // local immutable
+    z = 50             // ERROR: cannot assign to immutable z
     
     true {
-        x ::= 100 // OK: declares new immutable x (shadows local x)
-        w := 60   // local to block
+        x :: int = 100 // OK: declares new immutable x (shadows local x)
+        w : int = 60   // local to block
     }
     // w not accessible here (out of scope)
-}
-```
-
-### Return Type Inference
-When no return type is specified:
-- Procedure has `return <expr>` → type inferred from expression
-- Procedure has only `return` or no return → void
-- Multiple different return types → compile error (explicit type required)
-
-```
-get_value() {
-    return 42         // inferred as int
-}
-
-do_something() {
-    return            // void
-}
-
-print_text() {
-    // no return       // void
 }
 ```
 
 ### Memory Model
 - **Primitives** (`int`, `float`, `bool`) → pass by value
 - **Artifacts, Arrays, Lists** → pass by reference
-- **Mutability:** `:=` creates mutable references, `::=` creates immutable references (prevents modification, not copying)
+- **Mutability:** `:` creates mutable references, `::` creates immutable references (prevents modification, not copying)
 
 ### Entry Point
 Programs execute from `main()` if present, otherwise execute top-level statements in order.
@@ -712,8 +712,8 @@ Status {
 }
 
 Vec2 {
-    x :: float
-    y :: float
+    x :: float = 0.0
+    y :: float = 0.0
     
     length(): float {
         return sqrt(.x * .x + .y * .y)
@@ -725,7 +725,7 @@ Vec2 {
 }
 
 Math {
-    PI : float := 3.14159
+    PI :: float = 3.14159
     
     sqrt(x: float): float {
         // implementation
@@ -740,19 +740,19 @@ classify(value: int): string {
     |> true { return "non-positive" }
 }
 
-main() {
-    pos ::= Vec2(3.0, 4.0)
-    vel ::= Vec2(1.0, 0.0)
+main(): void {
+    pos :: Vec2 = Vec2(3.0, 4.0)
+    vel :: Vec2 = Vec2(1.0, 0.0)
     
-    status ::= Status.Running
+    status :: int = Status.Running
     
     status == Status.Running {
-        newPos ::= pos.add(vel)
-        distance ::= newPos.length()
+        newPos :: Vec2 = pos.add(vel)
+        distance :: float = newPos.length()
     }
     
-    items ::= [10, 20, 30, 40, 50]
-    sum := 0
+    items :: [int] = [10, 20, 30, 40, 50]
+    sum : int = 0
     
     i, 1 .. items {
         sum = sum + items[i]
@@ -764,13 +764,13 @@ main() {
         }
     }
     
-    count := 0
+    count : int = 0
     while count < 5 {
         count++
     }
     
-    radius ::= 5.0
-    area ::= Math.PI * radius * radius
+    radius :: float = 5.0
+    area :: float = Math.PI * radius * radius
 }
 ```
 
@@ -793,34 +793,23 @@ main() {
               | <skip_stmt>
               | <expr_stmt>
 
-<var_decl> ::= <ident> "::" <type>
-             | <ident> "::=" <expr>
-             | <ident> ":" <type> ":=" <expr>
-             | <ident> ":" <type>
-             | <ident> ":=" <expr>
+<var_decl> ::= <ident> "::" <type> "=" <expr>
              | <ident> ":" <type> "=" <expr>
              | <ident> "=" <expr>
 
-<proc_decl> ::= <ident> "(" <params> ")" <block>
-              | <ident> "(" <params> ")" ":" <type> <block>
+<proc_decl> ::= <ident> "(" <params> ")" ":" <type> <block>
 
 <params> ::= ε
            | <param> ("," <param>)*
 
-<param> ::= <ident>
-          | <ident> ":" <type>
-          | <ident> "=" <expr>
+<param> ::= <ident> ":" <type>
           | <ident> ":" <type> "=" <expr>
 
 <artifact_decl> ::= <ident> "{" <artifact_body> "}"
 
 <artifact_body> ::= (<property_decl> | <proc_decl> | <enum_member>)*
 
-<property_decl> ::= <ident> "::" <type>
-                  | <ident> "::=" <expr>
-                  | <ident> ":" <type> ":=" <expr>
-                  | <ident> ":" <type>
-                  | <ident> ":=" <expr>
+<property_decl> ::= <ident> "::" <type> "=" <expr>
                   | <ident> ":" <type> "=" <expr>
 
 <enum_member> ::= <ident>
@@ -871,7 +860,9 @@ main() {
 
 <unary_op> ::= "-" | "!" | "++" | "--"
 
-<type> ::= "int" | "float" | "string" | "bool" | <ident>
+<type> ::= "int" | "float" | "string" | "bool" | <ident> 
+         | "[" <type> "]"              // dynamic list
+         | "[" <int> "]" <type>        // fixed-size array
 
 <literal> ::= <int> | <float> | <string> | <bool> | "null"
 
