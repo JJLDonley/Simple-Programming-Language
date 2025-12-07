@@ -5,6 +5,7 @@
 ### Keywords
 - [ ] `while`, `break`, `return`, `skip`
 - [ ] `Mod`
+- [ ] `fn`
 - [ ] `true`, `false`, `null`
 
 ### Operators
@@ -86,10 +87,12 @@
 - [ ] Call with default: `greet()`
 - [ ] Call with argument: `greet("Alice")`
 
-#### First-Class Procedures
-- [ ] Assign to variable: `callback :: (int, int): int = add`
-- [ ] Pass as parameter
-- [ ] Return from procedure
+#### Procedure References
+- [ ] Assign to variable: `callback :: fn = add`
+- [ ] Mutable reference: `operation : fn = add`
+- [ ] Pass as parameter: `apply(operation: fn, ...)`
+- [ ] Type checking validates signature matches usage
+- [ ] Error: inline procedure definitions (no lambdas)
 
 #### Error Cases
 - [ ] Missing return type
