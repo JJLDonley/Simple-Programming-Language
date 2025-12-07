@@ -4,7 +4,8 @@
 **Simple** is a general-purpose programming language with clean syntax emphasizing composition over inheritance.
 
 - **Artifacts:** Unified construct for data structures, enumerations, and namespaces
-- **Procedures:** First-class functions with no keyword prefix
+- **Procedures:** Functions with explicit return types
+- **Procedure References:** Pass and store references to procedures
 - **Minimal conditionals:** Expression-based with `|>` chain operator for short-circuiting
 - **Strict typing:** All variables must have explicit type declarations
 - **Minimal syntax:** No unnecessary keywords, clear and readable
@@ -29,7 +30,7 @@ A **Procedure** is a callable function defined with no keyword prefix:
 identifier(params): return_type { body }
 ```
 
-Procedures are first-class citizens and can be assigned to variables, passed as arguments, and returned from other procedures.
+Procedures can be referenced and passed around using the `fn` type, but cannot be defined inline.
 
 ### Conditionals
 Conditionals are expression-based with no keywords:
@@ -49,6 +50,9 @@ Example:
 
 ### Control Flow
 `while`, `break`, `return`, `skip`
+
+### Types
+`fn`
 
 ### Declarations
 `Mod`
@@ -217,30 +221,44 @@ create_point(x: float = 0.0, y: float = 0.0): Point {
 }
 ```
 
-### First-Class Procedures
-Procedures are first-class citizens and can be assigned to variables, passed as arguments, and returned from other procedures:
+### Procedure References
+Procedures can be assigned to variables using the `fn` type:
+
+```
+<ident> : fn = <procedure_name>
+<ident> :: fn = <procedure_name>
+```
+
+### Examples
 
 ```
 add(a: int, b: int): int {
     return a + b
 }
 
-apply(operation: (int, int): int, x: int, y: int): int {
+subtract(a: int, b: int): int {
+    return a - b
+}
+
+// Assign procedure to variable
+callback :: fn = add
+
+// Use it
+result :: int = callback(5, 3)
+
+// Reassign to different procedure (if mutable)
+operation : fn = add
+operation = subtract
+
+// Pass as parameter
+apply(operation: fn, x: int, y: int): int {
     return operation(x, y)
 }
 
-callback :: (int, int): int = add
-result :: int = apply(callback, 5, 3)
-
-make_multiplier(factor: int): (int): int {
-    return (x: int): int {
-        return x * factor
-    }
-}
-
-double :: (int): int = make_multiplier(2)
-value :: int = double(5)
+result = apply(add, 10, 5)
 ```
+
+**Note:** The `fn` type is inferred from the referenced procedure. Type checking ensures the procedure signature matches usage.
 
 ---
 
@@ -622,6 +640,7 @@ int      // integer numbers
 float    // floating point numbers
 string   // text
 bool     // true or false
+fn       // procedure type
 ```
 
 ---
@@ -883,9 +902,9 @@ main(): void {
 
 <unary_op> ::= "-" | "!" | "++" | "--"
 
-<type> ::= "int" | "float" | "string" | "bool" | <ident> 
-         | "[" <type> "]"              // dynamic list
-         | "[" <int> "]" <type>        // fixed-size array
+<type> ::= "int" | "float" | "string" | "bool" | "fn" | <ident> 
+         | "[" <type> "]"                           // dynamic list
+         | "[" <int> "]" <type>                     // fixed-size array
 
 <literal> ::= <int> | <float> | <string> | <bool> | "null"
 
