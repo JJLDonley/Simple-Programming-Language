@@ -87,7 +87,7 @@ Example:
 `.` (property access), `[]` (index access)
 
 ### Pointer/Reference
-`&` (address-of), `*` (dereference/pointer type)
+`@` (address-of), `^` (dereference)
 
 ### Range
 `..` (iteration)
@@ -102,7 +102,7 @@ Example:
 From highest to lowest precedence:
 
 1. `++`, `--` (postfix), `[]`, `.` (member access)
-2. `!`, `-` (unary), `++`, `--` (prefix), `&`, `*` (address-of/deref)
+2. `!`, `-` (unary), `++`, `--` (prefix), `@`, `^` (address-of/deref)
 3. `*`, `/`, `%`
 4. `+`, `-`
 5. `<<`, `>>`
@@ -234,48 +234,48 @@ callback :: fn = add
 ## Pointers and References
 
 ### Pointers
-Pointers use C-style syntax for full read-write access:
+Pointers provide full read-write access with explicit syntax:
 
 ```
-ptr : *int = &x       // mutable pointer, can reassign and dereference
-ptr :: *int = &x      // immutable pointer, can't reassign but can dereference
+ptr : *int = @x       // mutable pointer, can reassign and dereference
+ptr :: *int = @x      // immutable pointer, can't reassign but can dereference
 ```
 
 **Operations:**
-- `&x` - get address of x
-- `*ptr` - dereference pointer
-- `ptr = &y` - reassign pointer (only if mutable)
-- `*ptr = 10` - modify value at address
+- `@x` - get address of x
+- `^ptr` - dereference pointer
+- `ptr = @y` - reassign pointer (only if mutable)
+- `^ptr = 10` - modify value at address
 
 ### References
-References provide read-only access with automatic dereferencing:
+References provide read-only access:
 
 ```
-ref : &int = &x       // read-only reference, can reassign ref
-ref :: &int = &x      // read-only reference, can't reassign ref
+ref : &int = @x       // read-only reference, can reassign ref
+ref :: &int = @x      // read-only reference, can't reassign ref
 ```
 
 **Operations:**
-- `&x` - get reference to x
-- `ref` - automatically dereferenced for reading
-- `ref = &y` - reassign reference (only if mutable)
-- `*ref = 10` - ERROR: references are read-only
+- `@x` - get reference to x
+- `^ref` - dereference reference (explicit)
+- `ref = @y` - reassign reference (only if mutable)
+- Cannot write through reference (read-only)
 
 ### Examples
 
 ```
 increment(value: *int): void {
-    *value = *value + 1
+    ^value = ^value + 1
 }
 
 calculate(value: &int): int {
-    return value * 2    // auto-deref
+    return ^value * 2
 }
 
 swap(a: *int, b: *int): void {
-    temp :: int = *a
-    *a = *b
-    *b = temp
+    temp :: int = ^a
+    ^a = ^b
+    ^b = temp
 }
 
 main(): void {
@@ -283,24 +283,30 @@ main(): void {
     y : int = 20
     
     // Pointers
-    ptr : *int = &x
-    *ptr = 15
-    ptr = &y
+    ptr : *int = @x
+    ^ptr = 15
+    ptr = @y
     
-    // References
-    ref : &int = &x
-    result :: int = ref * 2
+    // References (explicit deref)
+    ref : &int = @x
+    result :: int = ^ref * 2
     
     // Function calls
-    increment(&x)
-    value :: int = calculate(&x)
-    swap(&x, &y)
+    increment(@x)
+    value :: int = calculate(@x)
+    swap(@x, @y)
 }
 ```
 
 ### Key Differences
-- **Pointers (`*T`)**: C-style, explicit dereferencing, read-write access
-- **References (`&T`)**: Read-only, automatic dereferencing, safer for reading
+- **Pointers (`*T`)**: Explicit dereferencing with `^`, read-write access
+- **References (`&T`)**: Explicit dereferencing with `^`, read-only (cannot write)
+
+### Benefits of @ and ^
+- `@` - No confusion with bitwise AND (`&`)
+- `^` - No confusion with multiplication (`*`)
+- Clear visual distinction from other operators
+- Consistent: always explicit `^` for dereference
 
 ---
 
@@ -845,8 +851,8 @@ example(): void {
 ### Memory Model
 - **Primitives** (`int`, `float`, `bool`) → pass by value
 - **Artifacts, Arrays, Lists** → pass by reference
-- **Pointers** (`*T`) → C-style semantics, explicit dereferencing
-- **References** (`&T`) → read-only, automatic dereferencing
+- **Pointers** (`*T`) → explicit `^` to dereference, read-write access
+- **References** (`&T`) → explicit `^` to dereference, read-only access
 - **Mutability:** `:` creates mutable references, `::` creates immutable references
 
 ### Entry Point
@@ -932,11 +938,11 @@ main(): void {
     
     // Pointers and references
     x : int = 100
-    ptr : *int = &x
-    *ptr = 200
+    ptr : *int = @x
+    ^ptr = 200
     
-    ref : &int = &x
-    doubled :: int = ref * 2
+    ref : &int = @x
+    doubled :: int = ^ref * 2
 }
 ```
 
@@ -1027,7 +1033,7 @@ main(): void {
               | "&&" | "||"
               | "&" | "|" | "^" | "<<" | ">>"
 
-<unary_op> ::= "-" | "!" | "++" | "--" | "&" | "*"
+<unary_op> ::= "-" | "!" | "++" | "--" | "@" | "^"
 
 <type> ::= "int" | "float" | "string" | "bool" | "fn"
          | "i8" | "i16" | "i32" | "i64" | "i128"
@@ -1035,4 +1041,11 @@ main(): void {
          | "f32" | "f64"
          | <ident> 
          | "[" <type> "]"                           // dynamic list
-         | "[" <int> "]" <type
+         | "[" <int> "]" <type>                     // fixed-size array
+         | "*" <type>                               // pointer type
+         | "&" <type>                               // reference type
+
+<literal> ::= <int> | <float> | <string> | <bool> | "null"
+
+<ident> ::= [a-zA-Z_][a-zA-Z0-9_]*
+```
