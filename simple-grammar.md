@@ -1,4 +1,73 @@
-# Simple Language Grammar Specification
+## Pointers and References
+
+### Pointers
+Pointers use C-style syntax for full read-write access:
+
+```
+ptr : *int = &x       // mutable pointer, can reassign and dereference
+ptr :: *int = &x      // immutable pointer, can't reassign but can dereference
+```
+
+**Operations:**
+- `&x` - get address of x
+- `*ptr` - dereference pointer
+- `ptr = &y` - reassign pointer (only if mutable)
+- `*ptr = 10` - modify value at address
+
+### References
+References provide read-only access with automatic dereferencing:
+
+```
+ref : &int = &x       // read-only reference, can reassign ref
+ref :: &int = &x      // read-only reference, can't reassign ref
+```
+
+**Operations:**
+- `&x` - get reference to x
+- `ref` - automatically dereferenced for reading
+- `ref = &y` - reassign reference (only if mutable)
+- `*ref = 10` - ERROR: references are read-only
+
+### Examples
+
+```
+increment(value: *int): void {
+    *value = *value + 1
+}
+
+calculate(value: &int): int {
+    return value * 2    // auto-deref
+}
+
+swap(a: *int, b: *int): void {
+    temp :: int = *a
+    *a = *b
+    *b = temp
+}
+
+main(): void {
+    x : int = 10
+    y : int = 20
+    
+    // Pointers
+    ptr : *int = &x
+    *ptr = 15
+    ptr = &y
+    
+    // References
+    ref : &int = &x
+    result :: int = ref * 2
+    
+    // Function calls
+    increment(&x)
+    value :: int = calculate(&x)
+    swap(&x, &y)
+}
+```
+
+### Key Differences
+- **Pointers (`*T`)**: C-style, explicit dereferencing, read-write access
+- **References (`&T`)**: Read-only, automatic dereferencing, safer for reading# Simple Language Grammar Specification
 
 ## Overview
 **Simple** is a general-purpose programming language with clean syntax emphasizing composition over inheritance.
@@ -940,7 +1009,7 @@ main(): void {
               | "&&" | "||"
               | "&" | "|" | "^" | "<<" | ">>"
 
-<unary_op> ::= "-" | "!" | "++" | "--"
+<unary_op> ::= "-" | "!" | "++" | "--" | "&" | "*"
 
 <type> ::= "int" | "float" | "string" | "bool" | "fn"
          | "i8" | "i16" | "i32" | "i64" | "i128"
@@ -949,6 +1018,8 @@ main(): void {
          | <ident> 
          | "[" <type> "]"                           // dynamic list
          | "[" <int> "]" <type>                     // fixed-size array
+         | "*" <type>                               // pointer type
+         | "&" <type>                               // reference type
 
 <literal> ::= <int> | <float> | <string> | <bool> | "null"
 
