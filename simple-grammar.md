@@ -6,6 +6,7 @@
 - **Artifacts:** Unified construct for data structures, enumerations, and namespaces
 - **Procedures:** Functions with explicit return types
 - **Procedure References:** Pass and store references to procedures
+- **Pointers and References:** C-style pointers with read-only references
 - **Minimal conditionals:** Expression-based with `|>` chain operator for short-circuiting
 - **Strict typing:** All variables must have explicit type declarations
 - **Minimal syntax:** No unnecessary keywords, clear and readable
@@ -85,6 +86,9 @@ Example:
 ### Access
 `.` (property access), `[]` (index access)
 
+### Pointer/Reference
+`&` (address-of), `*` (dereference/pointer type)
+
 ### Range
 `..` (iteration)
 
@@ -98,7 +102,7 @@ Example:
 From highest to lowest precedence:
 
 1. `++`, `--` (postfix), `[]`, `.` (member access)
-2. `!`, `-` (unary), `++`, `--` (prefix)
+2. `!`, `-` (unary), `++`, `--` (prefix), `&`, `*` (address-of/deref)
 3. `*`, `/`, `%`
 4. `+`, `-`
 5. `<<`, `>>`
@@ -130,6 +134,44 @@ String:   "hello", 'world'
 Boolean:  true, false
 Null:     null
 ```
+
+---
+
+## Built-in Types
+
+### Integer Types
+```
+i8       // 8-bit signed integer
+i16      // 16-bit signed integer
+i32      // 32-bit signed integer
+i64      // 64-bit signed integer
+i128     // 128-bit signed integer
+int      // defaults to i64
+
+u8       // 8-bit unsigned integer
+u16      // 16-bit unsigned integer
+u32      // 32-bit unsigned integer
+u64      // 64-bit unsigned integer
+u128     // 128-bit unsigned integer
+```
+
+### Floating Point Types
+```
+f32      // 32-bit floating point
+f64      // 64-bit floating point
+float    // defaults to f64
+```
+
+### Other Types
+```
+string   // text
+bool     // true or false
+fn       // procedure reference
+```
+
+### Type Aliases
+- `int` is an alias for `i64`
+- `float` is an alias for `f64`
 
 ---
 
@@ -186,6 +228,79 @@ name :: string = "Alice"
 active :: bool = true
 callback :: fn = add
 ```
+
+---
+
+## Pointers and References
+
+### Pointers
+Pointers use C-style syntax for full read-write access:
+
+```
+ptr : *int = &x       // mutable pointer, can reassign and dereference
+ptr :: *int = &x      // immutable pointer, can't reassign but can dereference
+```
+
+**Operations:**
+- `&x` - get address of x
+- `*ptr` - dereference pointer
+- `ptr = &y` - reassign pointer (only if mutable)
+- `*ptr = 10` - modify value at address
+
+### References
+References provide read-only access with automatic dereferencing:
+
+```
+ref : &int = &x       // read-only reference, can reassign ref
+ref :: &int = &x      // read-only reference, can't reassign ref
+```
+
+**Operations:**
+- `&x` - get reference to x
+- `ref` - automatically dereferenced for reading
+- `ref = &y` - reassign reference (only if mutable)
+- `*ref = 10` - ERROR: references are read-only
+
+### Examples
+
+```
+increment(value: *int): void {
+    *value = *value + 1
+}
+
+calculate(value: &int): int {
+    return value * 2    // auto-deref
+}
+
+swap(a: *int, b: *int): void {
+    temp :: int = *a
+    *a = *b
+    *b = temp
+}
+
+main(): void {
+    x : int = 10
+    y : int = 20
+    
+    // Pointers
+    ptr : *int = &x
+    *ptr = 15
+    ptr = &y
+    
+    // References
+    ref : &int = &x
+    result :: int = ref * 2
+    
+    // Function calls
+    increment(&x)
+    value :: int = calculate(&x)
+    swap(&x, &y)
+}
+```
+
+### Key Differences
+- **Pointers (`*T`)**: C-style, explicit dereferencing, read-write access
+- **References (`&T`)**: Read-only, automatic dereferencing, safer for reading
 
 ---
 
@@ -647,44 +762,6 @@ Imports all declarations from the specified module.
 
 ---
 
-## Built-in Types
-
-### Integer Types
-```
-i8       // 8-bit signed integer
-i16      // 16-bit signed integer
-i32      // 32-bit signed integer
-i64      // 64-bit signed integer
-i128     // 128-bit signed integer
-int      // defaults to i64
-
-u8       // 8-bit unsigned integer
-u16      // 16-bit unsigned integer
-u32      // 32-bit unsigned integer
-u64      // 64-bit unsigned integer
-u128     // 128-bit unsigned integer
-```
-
-### Floating Point Types
-```
-f32      // 32-bit floating point
-f64      // 64-bit floating point
-float    // defaults to f64
-```
-
-### Other Types
-```
-string   // text
-bool     // true or false
-fn       // procedure reference
-```
-
-### Type Aliases
-- `int` is an alias for `i64`
-- `float` is an alias for `f64`
-
----
-
 ## Type Coercion and Arithmetic Rules
 
 ### Division
@@ -768,7 +845,9 @@ example(): void {
 ### Memory Model
 - **Primitives** (`int`, `float`, `bool`) → pass by value
 - **Artifacts, Arrays, Lists** → pass by reference
-- **Mutability:** `:` creates mutable references, `::` creates immutable references (prevents modification, not copying)
+- **Pointers** (`*T`) → C-style semantics, explicit dereferencing
+- **References** (`&T`) → read-only, automatic dereferencing
+- **Mutability:** `:` creates mutable references, `::` creates immutable references
 
 ### Entry Point
 Programs execute from `main()` if present, otherwise execute top-level statements in order.
@@ -850,6 +929,14 @@ main(): void {
     
     radius :: float = 5.0
     area :: float = Math.PI * radius * radius
+    
+    // Pointers and references
+    x : int = 100
+    ptr : *int = &x
+    *ptr = 200
+    
+    ref : &int = &x
+    doubled :: int = ref * 2
 }
 ```
 
@@ -940,7 +1027,7 @@ main(): void {
               | "&&" | "||"
               | "&" | "|" | "^" | "<<" | ">>"
 
-<unary_op> ::= "-" | "!" | "++" | "--"
+<unary_op> ::= "-" | "!" | "++" | "--" | "&" | "*"
 
 <type> ::= "int" | "float" | "string" | "bool" | "fn"
          | "i8" | "i16" | "i32" | "i64" | "i128"
@@ -948,9 +1035,4 @@ main(): void {
          | "f32" | "f64"
          | <ident> 
          | "[" <type> "]"                           // dynamic list
-         | "[" <int> "]" <type>                     // fixed-size array
-
-<literal> ::= <int> | <float> | <string> | <bool> | "null"
-
-<ident> ::= [a-zA-Z_][a-zA-Z0-9_]*
-```
+         | "[" <int> "]" <type
