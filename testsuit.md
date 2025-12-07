@@ -25,6 +25,15 @@
 - [ ] Boolean: `true`, `false`
 - [ ] Null: `null`
 
+### Integer Types
+- [ ] Signed: `i8`, `i16`, `i32`, `i64`, `i128`
+- [ ] Unsigned: `u8`, `u16`, `u32`, `u64`, `u128`
+- [ ] Default `int` maps to `i64`
+
+### Float Types
+- [ ] `f32`, `f64`
+- [ ] Default `float` maps to `f64`
+
 ### Identifiers
 - [ ] Valid: `x`, `_value`, `myVar123`
 - [ ] Invalid: `123abc`, `my-var`
@@ -196,6 +205,8 @@
 - [ ] Assignment type matches declaration
 - [ ] Error: `x : int = "string"`
 - [ ] Error: assign wrong type to variable
+- [ ] Integer type ranges enforced (i8: -128 to 127, u8: 0 to 255, etc.)
+- [ ] Float precision differences (f32 vs f64)
 
 #### Procedures
 - [ ] Parameter types match
