@@ -17,6 +17,7 @@
 - [ ] Access: `.`, `[]`
 - [ ] Range: `..`
 - [ ] Chain: `|>`
+- [ ] Pointer/Reference: `&` (address-of), `*` (dereference)
 
 ### Literals
 - [ ] Integer: `123`, `-456`, `0`
@@ -66,6 +67,22 @@
 #### Assignment
 - [ ] `x = 5` (to mutable variable)
 - [ ] Error: `x = 5` (to immutable variable)
+
+### Pointers and References
+
+#### Pointers
+- [ ] `ptr : *int = &x`
+- [ ] `ptr :: *int = &x` (immutable pointer)
+- [ ] Dereference: `*ptr = 10`
+- [ ] Address-of: `&x`
+- [ ] Reassign pointer: `ptr = &y`
+- [ ] Error: reassign immutable pointer
+
+#### References
+- [ ] `ref : &int = &x`
+- [ ] `ref :: &int = &x` (immutable reference)
+- [ ] Auto-dereference for reading: `y = ref`
+- [ ] Error: `*ref = 10` (references are read-only)
 
 ### Arrays and Lists
 
