@@ -52,7 +52,10 @@ Example:
 `while`, `break`, `return`, `skip`
 
 ### Types
-`fn`
+`int`, `float`, `string`, `bool`, `fn`
+`i8`, `i16`, `i32`, `i64`, `i128`
+`u8`, `u16`, `u32`, `u64`, `u128`
+`f32`, `f64`
 
 ### Declarations
 `Mod`
@@ -158,19 +161,30 @@ Null:     null
 
 ### Examples
 ```
-// Immutable
-name :: string = "Jae"
-age :: int = 25
-PI :: float = 3.14159
+// Integer types
+small :: i8 = 127
+medium :: i32 = 100000
+large :: i64 = 9223372036854775807
+huge :: i128 = 170141183460469231731687303715884105727
 
-// Mutable
-count : int = 0
-total : int = 100
-active : bool = true
+// Unsigned types
+byte :: u8 = 255
+count :: u32 = 4294967295
 
-// Assignment
-count = 5              // OK: reassign mutable
-name = "John"          // ERROR: cannot assign to immutable
+// Default int (i64)
+x :: int = 42
+
+// Floating point types
+precise :: f32 = 3.14159
+precise_double :: f64 = 3.141592653589793
+
+// Default float (f64)
+pi :: float = 3.14159
+
+// Other types
+name :: string = "Alice"
+active :: bool = true
+callback :: fn = add
 ```
 
 ---
@@ -635,13 +649,39 @@ Imports all declarations from the specified module.
 
 ## Built-in Types
 
+### Integer Types
 ```
-int      // integer numbers
-float    // floating point numbers
+i8       // 8-bit signed integer
+i16      // 16-bit signed integer
+i32      // 32-bit signed integer
+i64      // 64-bit signed integer
+i128     // 128-bit signed integer
+int      // defaults to i64
+
+u8       // 8-bit unsigned integer
+u16      // 16-bit unsigned integer
+u32      // 32-bit unsigned integer
+u64      // 64-bit unsigned integer
+u128     // 128-bit unsigned integer
+```
+
+### Floating Point Types
+```
+f32      // 32-bit floating point
+f64      // 64-bit floating point
+float    // defaults to f64
+```
+
+### Other Types
+```
 string   // text
 bool     // true or false
-fn       // procedure type
+fn       // procedure reference
 ```
+
+### Type Aliases
+- `int` is an alias for `i64`
+- `float` is an alias for `f64`
 
 ---
 
@@ -902,7 +942,11 @@ main(): void {
 
 <unary_op> ::= "-" | "!" | "++" | "--"
 
-<type> ::= "int" | "float" | "string" | "bool" | "fn" | <ident> 
+<type> ::= "int" | "float" | "string" | "bool" | "fn"
+         | "i8" | "i16" | "i32" | "i64" | "i128"
+         | "u8" | "u16" | "u32" | "u64" | "u128"
+         | "f32" | "f64"
+         | <ident> 
          | "[" <type> "]"                           // dynamic list
          | "[" <int> "]" <type>                     // fixed-size array
 
